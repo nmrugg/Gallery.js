@@ -1,0 +1,118 @@
+body {
+    background: url("/images/cork.png?virtual=1");
+}
+
+.pic a:after, .icon a:after {
+    content: attr(title);
+}
+
+.pic a:before {
+    content: "";
+    height: 27px;
+    /* Since the element will be stretched across the width, it must not repeat. */
+    background: url("/images/tape.png?virtual=1") no-repeat center;
+    display:block;
+    /* Stretch the element all the way across the photo. */
+    position: absolute;
+    right: 0;
+    left: 0;
+    margin-top: -20px;
+}
+
+.pic a, .icon a, .picpile a {
+    font-family: "EuphoriaScriptRegular", sans-serif;
+    text-decoration: none;
+    color: #333;
+    font-size: 21px;
+    text-align: center;
+}
+
+.pic a, .icon a {
+    display: inline;
+    float: left;
+    margin: 0 0 27px 30px;
+}
+.pic a {
+    background: #fff;
+    -webkit-box-shadow: 0 3px 6px rgba(0,0,0,.4);
+       -moz-box-shadow: 0 3px 6px rgba(0,0,0,.4);
+            box-shadow: 0 3px 6px rgba(0,0,0,.4);
+    -webkit-transition: -webkit-transform .15s linear;
+    width: 175px;
+    padding: 10px 10px 15px;
+}
+
+.icon a {
+    width: 128px;
+}
+
+.pic img {
+    display: block;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+/*HACK: This makes it so that images of different sizes don't bunch up so easily. */
+.pic {
+    min-height: 13px;
+}
+
+
+.picpile a {
+    width: 175px;
+    height: 210px;
+    display: block;
+    margin: 0 10px;
+    float: left;
+    /* This makes child absolutely position elements to be placed relative to it. */
+    position: relative;
+}
+
+.picpile a:before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+    background: url("/images/folder-back.png?virtual=1") bottom no-repeat;
+}
+
+.picpile a:after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+    background: url("/images/folder-front.png?virtual=1") bottom no-repeat;
+}
+
+.picpile .caption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 120px;
+    z-index: 10;
+    -moz-transform: rotate(-9deg);
+    padding: 0 10px;
+}
+
+.picpile a img {
+    position: absolute;
+    left: 0;
+    bottom: 45px;
+}
+
+
+@font-face {
+    font-family: 'EuphoriaScriptRegular';
+    src: url('/fonts/euphoriascript-regular.eot?virtual=1');
+    src: url('/fonts/euphoriascript-regular.eot?virtual=1#iefix') format('embedded-opentype'),
+         url('/fonts/euphoriascript-regular.woff?virtual=1') format('woff'),
+         url('/fonts/euphoriascript-regular.ttf?virtual=1') format('truetype'),
+         url('/fonts/euphoriascript-regular.svg?virtual=1#EuphoriaScriptRegular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
