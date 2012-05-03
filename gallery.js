@@ -543,15 +543,15 @@ function make_top_html(dir)
     dir = String(dir).trim();
     
     if (dir === "") {
-        title = config.title;
+        title = htmlentities(config.title);
     } else {
-        title = dir + " - " + config.title;
+        title = beautify_name(dir) + " - " + htmlentities(config.title);
     }
     
     html += "<html>";
     html += "<head>";
     html += "<meta http-equiv=content-type content=\"text/html;charset=UTF-8\">";
-    html += "<title>" + htmlentities(title) + "</title>";
+    html += "<title>" + title + "</title>";
     html += "<link rel=\"stylesheet\" href=\"/css/styles.css?virtual=1\">";
     html += "<script src=\"/client/main.js?virtual=1\"></script>";
     html += "</head>";
