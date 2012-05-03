@@ -8,6 +8,5 @@ VisualPharm (Ivan Boyko)
 Creative Commons Attribution (by)
 http://findicons.com/icon/51044/play
 
-
-watermark
-convert Aaron\ playing\ Grandpa\ beep\ game.avi.gif -coalesce -gravity Center -geometry +0+0 null: ../../images/play.png -layers composite -layers optimize test.gif
+Euphoria Script font
+SIL OPEN FONT LICENSE Version 1.1
