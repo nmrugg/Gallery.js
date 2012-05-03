@@ -405,7 +405,7 @@ create_thumbnail = (function ()
         var thumb_info = get_thumb_info(file);
         
         if (!path.existsSync(thumb_info.thumb_dir)) {
-            fs.mkdirSync(thumb_info.thumb_dir);
+            fs.mkdirSync(thumb_info.thumb_dir, 0777);
         }
         
         if (!max_size) {
