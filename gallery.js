@@ -640,7 +640,8 @@ setTimeout(create_all_thumbnails, 0);
 /// Start the server.
 http.createServer(function (request, response)
 {
-    var filename,
+    var cookies,
+        filename,
         get_data,
         post_data,
         uri,
@@ -715,6 +716,16 @@ http.createServer(function (request, response)
         }
         
         response.end();
+    }
+    
+    /// Are there cookies?
+    if (request.headers.cookie) {
+        cookies = {};
+        request.headers.cookie.split(";").forEach(function (cookie)
+        {
+            var parts = cookie.split("=");
+            cookies[parts[0]] = parts[1];
+        });
     }
     
     /// Is there GET data?
