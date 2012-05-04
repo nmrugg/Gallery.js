@@ -727,7 +727,7 @@ http.createServer(function (request, response)
                 }
             }
         } else if (get_data.virtual && path.existsSync(process.cwd() + uri)) {
-            stat = fs.statSync(process.cwd() + uri).mtime;
+            stat = fs.statSync(process.cwd() + uri);
             ///TODO: Make sure it cannot access all files (just files in certain sub directories.
             /// Check cache.
             if (request.headers["if-modified-since"] && Date.parse(request.headers["if-modified-since"]) >= Date.parse(stat.mtime)) {
