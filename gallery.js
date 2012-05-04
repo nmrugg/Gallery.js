@@ -647,6 +647,16 @@ http.createServer(function (request, response)
         uri,
         url_parsed = url.parse(request.url);
     
+    /// If the gallery is password protected, check for credentials.
+    ///NOTE: This method is not secure and should not be used over a public connection.
+    ///NOTE: .substr(6) is to remove the text "Basic " preceeding the usernamd and password.
+    if (config.protect && (!request.headers.authorization || new Buffer(request.headers.authorization.substr(6), "base64").toString("utf8") !== config.username + ":" + config.password)) {
+        response.writeHead(401, {"Content-Type": "text/html", "WWW-Authenticate": "Basic realm=\"Secure Area\""});
+        response.write("Unauthorized");
+        response.end();
+        return;
+    }
+    
     uri = qs.unescape(url_parsed.pathname);
     
     /// A valid request must begin with a slash.
