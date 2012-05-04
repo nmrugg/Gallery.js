@@ -174,6 +174,8 @@ function get_thumb_info(file)
         thumb_path,
         type;
     
+    ///TODO: It should also incorporate the last modified time (mtime) to handle changes to already thumb'ed files.
+    
     switch (ext.toLowerCase()) {
     case ".jpg":
     case ".jpeg":
@@ -691,7 +693,6 @@ http.createServer(function (request, response)
                 len = dirs.length;
                 for (i = 0; i < len; i += 1) {
                     response.write(make_picture_pile(dirs[i], path.join(filename, dirs[i]), dirs[i]));
-                    //response.write("<div><a href=\"" + htmlentities(dirs[i]) + "/\" title=\"" + beautify_name(dirs[i]) + "\">" + htmlentities(dirs[i]) + "</a></div>");
                 }
                 
                 /// Display thumbnails.
