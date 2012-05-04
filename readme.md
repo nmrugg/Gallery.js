@@ -2,7 +2,7 @@
 A super simple photo and video gallery in Javascript. 
 
 <h3>Usage</h3>
-First, copy config.sample.js to config.js and make any necessary changes. Then start it with Node.js:
+First, copy config.sample.js to config.js, and make any necessary changes. Then start it with Node.js:
 
     node gallery.js
 

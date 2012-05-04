@@ -142,28 +142,12 @@ htmlentities = (function ()
         "\u00ff": "&yuml;"
     };
     
-    function enc(symbol)
-    {
-        return entities[symbol];
-    }
-    /*
-    return function (str, options)
-    {
-        var regex_str = "\u0027\u003c\u003e\u00a0-\u00ff";
-        
-        if (!options || !options.ignore_double_quote) {
-            regex_str += "\u0022";
-        }
-        if (!options || !options.ignore_single_quote) {
-            regex_str += "\u0026";
-        }
-        
-        return String(str).replace(new RegExp("[" + regex_str + "]", "g"), enc);
-    };
-    */
     return function (str)
     {
-        return String(str).replace(/[\u0022\u0026\u0027\u003c\u003e\u00a0-\u00ff]/g, enc);
+        return String(str).replace(/[\u0022\u0026\u0027\u003c\u003e\u00a0-\u00ff]/g, function enc(symbol)
+        {
+            return entities[symbol];
+        });
     };
 }());
 
@@ -715,9 +699,12 @@ http.createServer(function (request, response)
                     }
                 }
                 
+                ///TODO: Display next folder (if any). (What about previous folder?)
+                
                 response.write(make_bottom_html());
                 
             /// Write out files.
+            ///TODO: Make reading the files async.
             } else {
                 /// Check cache.
                 if (request.headers["if-modified-since"] && Date.parse(request.headers["if-modified-since"]) >= Date.parse(stat.mtime)) {
@@ -729,7 +716,7 @@ http.createServer(function (request, response)
             }
         } else if (get_data.virtual && path.existsSync(process.cwd() + uri)) {
             stat = fs.statSync(process.cwd() + uri);
-            ///TODO: Make sure it cannot access all files (just files in certain sub directories.
+            ///TODO: Make sure it cannot access all files (just files in certain sub directories).
             /// Check cache.
             if (request.headers["if-modified-since"] && Date.parse(request.headers["if-modified-since"]) >= Date.parse(stat.mtime)) {
                 response.writeHead(304, {});
@@ -771,7 +758,6 @@ http.createServer(function (request, response)
         
         request.on("end", function(chunk)
         {
-            ///NOTE: POST data can be retrieved in node.js scripts via the following code:
             post_data = qs.parse(post_data);
             request_page();
         });
