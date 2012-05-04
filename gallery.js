@@ -174,7 +174,7 @@ function get_thumb_info(file)
         thumb_path,
         type;
     
-    switch (ext) {
+    switch (ext.toLowerCase()) {
     case ".jpg":
     case ".jpeg":
     case ".jpe":
