@@ -720,7 +720,7 @@ http.createServer(function (request, response)
             } else {
                 /// Check cache.
                 if (request.headers["if-modified-since"] && Date.parse(request.headers["if-modified-since"]) >= Date.parse(stat.mtime)) {
-                    response.writeHead(304, {"Content-Type": mime.lookup(filename)});
+                    response.writeHead(304, {});
                 } else {
                     response.writeHead(200, {"Content-Type": mime.lookup(filename), "Last-Modified": stat.mtime});
                     response.write(fs.readFileSync(filename));
@@ -731,7 +731,7 @@ http.createServer(function (request, response)
             ///TODO: Make sure it cannot access all files (just files in certain sub directories.
             /// Check cache.
             if (request.headers["if-modified-since"] && Date.parse(request.headers["if-modified-since"]) >= Date.parse(stat.mtime)) {
-                response.writeHead(304, {"Content-Type": mime.lookup(uri)});
+                response.writeHead(304, {});
             } else {
                 response.writeHead(200, {"Content-Type": mime.lookup(uri), "Last-Modified": stat.mtime});
                 response.write(fs.readFileSync(process.cwd() + uri));
