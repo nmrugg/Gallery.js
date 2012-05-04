@@ -237,8 +237,17 @@ create_thumbnail = (function ()
     
     function create_image_thumb(file, thumb_name, callback, max_size)
     {
+        var args = [file, "-auto-orient", "-thumbnail", max_size + "x" + max_size];
+        
         if (path.existsSync(file)) {
-            execFile("convert", [file, "-auto-orient", "-thumbnail", max_size + "x" + max_size, thumb_name], function (err, stdout, stderr)
+            if (!config.high_quality) {
+                args[args.length] = "-quality";
+                args[args.length] = 86;
+            }
+            
+            args[args.length] = thumb_name;
+            
+            execFile("convert", args, function (err, stdout, stderr)
             {
                 if (typeof callback === "function") {
                     callback(thumb_name);
