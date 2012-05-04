@@ -685,16 +685,20 @@ http.createServer(function (request, response)
                 files = get_files_or_dirs(filename, true);
                 len = files.length;
                 for (i = 0; i < len; i += 1) {
-                    thumb_info = get_thumb_info(path.join(filename, files[i]));
-                    if (thumb_info.exists) {
-                        response.write("<div class=pic><a style=\"" + random_rotation_css(-6, 6) +"\" target=_blank title=\"" + beautify_name(files[i]) + "\" href=\"" + htmlentities(files[i]) + "\">");
-                        response.write("<img onload=\"adjust_pic_width(this)\" src=\"" + htmlentities(thumb_info.thumb_path_rel) + "\">");
-                    } else {
-                        response.write("<div class=icon><a target=_blank title=\"" + beautify_name(files[i]) + "\" href=\"" + htmlentities(files[i]) + "\">");
-                        /// If it has no icon, display a blank page icon in its stead.
-                        response.write("<img src=\"/images/file-icon.png?virtual=1\">");
+                    /// Ignore dummy files.
+                    ///TODO: Make this configurable.
+                    if (files[i] !== "Thumbs.db") {
+                        thumb_info = get_thumb_info(path.join(filename, files[i]));
+                        if (thumb_info.exists) {
+                            response.write("<div class=pic><a style=\"" + random_rotation_css(-6, 6) +"\" target=_blank title=\"" + beautify_name(files[i]) + "\" href=\"" + htmlentities(files[i]) + "\">");
+                            response.write("<img onload=\"adjust_pic_width(this)\" src=\"" + htmlentities(thumb_info.thumb_path_rel) + "\">");
+                        } else {
+                            response.write("<div class=icon><a target=_blank title=\"" + beautify_name(files[i]) + "\" href=\"" + htmlentities(files[i]) + "\">");
+                            /// If it has no icon, display a blank page icon in its stead.
+                            response.write("<img src=\"/images/file-icon.png?virtual=1\">");
+                        }
+                        response.write("</a></div>");
                     }
-                    response.write("</a></div>");
                 }
                 
                 response.write(make_bottom_html());
