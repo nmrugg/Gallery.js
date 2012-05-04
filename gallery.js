@@ -673,10 +673,12 @@ http.createServer(function (request, response)
             files,
             i,
             len,
-            thumb_info;
+            thumb_info,
+            stat;
         
         if (path.existsSync(filename)) {
-            if (fs.statSync(filename).isDirectory()) {
+            stat = fs.statSync(filename);
+            if (stat.isDirectory()) {
                 response.writeHead(200, {"Content-Type": "text/html"});
                 response.write(make_top_html(path.basename(uri.substr(0, uri.length - 1))));
                 
@@ -716,13 +718,24 @@ http.createServer(function (request, response)
                 
             /// Write out files.
             } else {
-                response.writeHead(200, {"Content-Type": mime.lookup(filename)});
-                response.write(fs.readFileSync(filename));
+                /// Check cache.
+                if (request.headers["if-modified-since"] && Date.parse(request.headers["if-modified-since"]) >= Date.parse(stat.mtime)) {
+                    response.writeHead(304, {"Content-Type": mime.lookup(filename)});
+                } else {
+                    response.writeHead(200, {"Content-Type": mime.lookup(filename), "Last-Modified": stat.mtime});
+                    response.write(fs.readFileSync(filename));
+                }
             }
         } else if (get_data.virtual && path.existsSync(process.cwd() + uri)) {
+            stat = fs.statSync(process.cwd() + uri).mtime;
             ///TODO: Make sure it cannot access all files (just files in certain sub directories.
-            response.writeHead(200, {"Content-Type": mime.lookup(uri)});
-            response.write(fs.readFileSync(process.cwd() + uri));
+            /// Check cache.
+            if (request.headers["if-modified-since"] && Date.parse(request.headers["if-modified-since"]) >= Date.parse(stat.mtime)) {
+                response.writeHead(304, {"Content-Type": mime.lookup(uri)});
+            } else {
+                response.writeHead(200, {"Content-Type": mime.lookup(uri), "Last-Modified": stat.mtime});
+                response.write(fs.readFileSync(process.cwd() + uri));
+            }
         }
         
         response.end();
