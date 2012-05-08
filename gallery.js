@@ -677,7 +677,8 @@ http.createServer(function (request, response)
     
     function request_page()
     {
-        var dirs,
+        var basedir,
+            dirs,
             files,
             i,
             len,
@@ -737,14 +738,17 @@ http.createServer(function (request, response)
                 }
             }
         } else if (get_data.virtual && path.existsSync(root_path + uri)) {
-            stat = fs.statSync(root_path + uri);
-            ///TODO: Make sure it cannot access all files (just files in certain sub directories).
-            /// Check cache.
-            if (request.headers["if-modified-since"] && Date.parse(request.headers["if-modified-since"]) >= Date.parse(stat.mtime)) {
-                response.writeHead(304, {});
-            } else {
-                response.writeHead(200, {"Content-Type": mime.lookup(uri), "Last-Modified": stat.mtime});
-                response.write(fs.readFileSync(root_path + uri));
+            /// Make sure it cannot access all files (just files in certain sub directories).
+            basedir = path.dirname(uri);
+            if (basedir === "/css" || basedir === "/client" || basedir === "/images" || basedir === "/fonts" || basedir === "/readme") {
+                stat = fs.statSync(root_path + uri);
+                /// Check cache.
+                if (request.headers["if-modified-since"] && Date.parse(request.headers["if-modified-since"]) >= Date.parse(stat.mtime)) {
+                    response.writeHead(304, {});
+                } else {
+                    response.writeHead(200, {"Content-Type": mime.lookup(uri), "Last-Modified": stat.mtime});
+                    response.write(fs.readFileSync(root_path + uri));
+                }
             }
         }
         
