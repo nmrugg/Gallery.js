@@ -17,7 +17,20 @@ var execFile = require("child_process").execFile,
     create_thumbnail,
     htmlentities,
     
-    port = 8888;
+    root_path = process.cwd(),
+    port      = 8888;
+
+if (process.argv.length > 3) {
+    root_path = process.argv[2];
+    port = process.argv[3];
+} else if (String(Number(process.argv[2])) === process.argv[2]) {
+    port = process.argv[2];
+} else {
+    root_path = process.argv[2];
+}
+
+/// Convert it to an absolute path.
+root_path = path.resolve(root_path);
 
 /*
 process.on("uncaughtException", function(e)
@@ -227,7 +240,7 @@ create_thumbnail = (function ()
                 return "C:\\temp\\";
             }
             
-            return process.cwd() + "/";
+            return root_path + "/";
         }());
     
     function random_str()
@@ -723,15 +736,15 @@ http.createServer(function (request, response)
                     response.write(fs.readFileSync(filename));
                 }
             }
-        } else if (get_data.virtual && path.existsSync(process.cwd() + uri)) {
-            stat = fs.statSync(process.cwd() + uri);
+        } else if (get_data.virtual && path.existsSync(root_path + uri)) {
+            stat = fs.statSync(root_path + uri);
             ///TODO: Make sure it cannot access all files (just files in certain sub directories).
             /// Check cache.
             if (request.headers["if-modified-since"] && Date.parse(request.headers["if-modified-since"]) >= Date.parse(stat.mtime)) {
                 response.writeHead(304, {});
             } else {
                 response.writeHead(200, {"Content-Type": mime.lookup(uri), "Last-Modified": stat.mtime});
-                response.write(fs.readFileSync(process.cwd() + uri));
+                response.write(fs.readFileSync(root_path + uri));
             }
         }
         
