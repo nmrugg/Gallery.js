@@ -32,20 +32,20 @@ if (process.argv.length > 3) {
 /// Convert it to an absolute path.
 root_path = path.resolve(root_path);
 
-/*
 process.on("uncaughtException", function(e)
 {
+    
+    ///NOTE: This does not work right in at least Node.js 0.6.15. The e.errno and e.code are the same for some reason. Do more research and maybe send a bug report.
     if (e.errno === 98) {
         console.log("Error: Unable to create server because port " + port + " is already is use.");
     } else if (e.errno === 13) {
         console.log("Error: You do not have permission to open port " + port + ".\nTry a port above 1023 or running \"sudo !!\"");
     } else {
-        console.log("Error: " + e.message);
+        console.log(e.stack);
     }
     
     process.exit(e.errno);
 });
-*/
 
 htmlentities = (function ()
 {
