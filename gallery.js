@@ -300,7 +300,7 @@ create_thumbnail = (function ()
                 /// Add the the play button watermark.
                 ///TODO: Determine if this can be combined with another command.
                 ///TODO: Make the play button scale if the image is too small.
-                execFile("convert", [thumb_name, "-coalesce", "-gravity", "Center", "-geometry", "+0+0", "null:", "./images/play.png", "-layers", "composite", "-layers", "optimize", thumb_name], function (err, stdout, stderr)
+                execFile("convert", [thumb_name, "-coalesce", "-gravity", "Center", "-geometry", "+0+0", "null:", root_path + "/images/play.png", "-layers", "composite", "-layers", "optimize", thumb_name], function (err, stdout, stderr)
                 {
 
                     if (stderr) {
