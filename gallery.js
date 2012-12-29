@@ -1,4 +1,4 @@
-/*jshint forin:true, noarg:true, noempty:true, eqeqeq:true, bitwise:true, strict:true, undef:true, unused:true, curly:true, browser:true, node:true, indent:4, maxerr:50, globalstrict:true, nomen:false, white:true, newcap:true */
+/*jshint forin:true, noarg:true, noempty:true, eqeqeq:true, bitwise:true, strict:true, undef:true, unused:true, curly:true, browser:true, node:true, indent:4, maxerr:50, globalstrict:true, nomen:false, white:false, newcap:true */
 
 "use strict";
 
@@ -22,13 +22,13 @@ server_config.root_path = config.dir;
 /// Make sure it is an absolute path.
 config.base_path = path.resolve(config.base_path);
 
-process.on("uncaughtException", function(e)
+process.on("uncaughtException", function (e)
 {
     ///NOTE: This does not work right in at least Node.js 0.6.15. The e.errno and e.code are the same for some reason. Do more research and maybe send a bug report.
     if (e.errno === 98) {
-        console.log("Error: Unable to create server because port " + port + " is already is use.");
+        console.log("Error: Unable to create server because port " + config.port + " is already is use.");
     } else if (e.errno === 13) {
-        console.log("Error: You do not have permission to open port " + port + ".\nTry a port above 1023 or running \"sudo !!\"");
+        console.log("Error: You do not have permission to open port " + config.port + ".\nTry a port above 1023 or running \"sudo !!\"");
     } else {
         if (e.stack) {
             console.log("Error Stack:");
@@ -332,8 +332,6 @@ create_thumbnail = (function ()
 
 function walk_through_folders(dir, obj, callback)
 {
-    var content;
-    
     if (dir.substr(-1) !== "/") {
         dir += "/";
     }
