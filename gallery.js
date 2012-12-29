@@ -1,12 +1,10 @@
-/*jslint node: true, nomen: true, white: true, indent: 4 */
+/*jshint forin:true, noarg:true, noempty:true, eqeqeq:true, bitwise:true, strict:true, undef:true, unused:true, curly:true, browser:true, node:true, indent:4, maxerr:50, globalstrict:true, nomen:false, white:true, newcap:true */
 
-/// For help: node server.js --help
+"use strict";
 
 var execFile = require("child_process").execFile,
     fs       = require("fs"),
     path     = require("path"),
-    url      = require("url"),
-    qs       = require("querystring"),
     server   = require("./server.js"),
     
     /// Third party dependancy
@@ -15,9 +13,9 @@ var execFile = require("child_process").execFile,
     config = require("./config.js").config,
     
     create_thumbnail,
-    htmlentities,
     
     server_config = {};
+
 
 server_config.root_path = config.dir;
 
@@ -33,130 +31,16 @@ process.on("uncaughtException", function(e)
         console.log("Error: You do not have permission to open port " + port + ".\nTry a port above 1023 or running \"sudo !!\"");
     } else {
         if (e.stack) {
+            console.log("Error Stack:");
             console.log(e.stack);
         }
+        console.log("Error:");
         console.log(e);
     }
     
     process.exit(e.errno);
 });
 
-htmlentities = (function ()
-{
-    var entities = {
-        /// Double Quote
-        "\u0022": "&quot;",
-        "\u0026": "&amp;",
-        /// Single Quote
-        "\u0027": "&#39;",
-        "\u003c": "&lt;",
-        "\u003e": "&gt;",
-        "\u00a0": "&nbsp;",
-        "\u00a1": "&iexcl;",
-        "\u00a2": "&cent;",
-        "\u00a3": "&pound;",
-        "\u00a4": "&curren;",
-        "\u00a5": "&yen;",
-        "\u00a6": "&brvbar;",
-        "\u00a7": "&sect;",
-        "\u00a8": "&uml;",
-        "\u00a9": "&copy;",
-        "\u00aa": "&ordf;",
-        "\u00ab": "&laquo;",
-        "\u00ac": "&not;",
-        "\u00ad": "&shy;",
-        "\u00ae": "&reg;",
-        "\u00af": "&macr;",
-        "\u00b0": "&deg;",
-        "\u00b1": "&plusmn;",
-        "\u00b2": "&sup2;",
-        "\u00b3": "&sup3;",
-        "\u00b4": "&acute;",
-        "\u00b5": "&micro;",
-        "\u00b6": "&para;",
-        "\u00b7": "&middot;",
-        "\u00b8": "&cedil;",
-        "\u00b9": "&sup1;",
-        "\u00ba": "&ordm;",
-        "\u00bb": "&raquo;",
-        "\u00bc": "&frac14;",
-        "\u00bd": "&frac12;",
-        "\u00be": "&frac34;",
-        "\u00bf": "&iquest;",
-        "\u00c0": "&Agrave;",
-        "\u00c1": "&Aacute;",
-        "\u00c2": "&Acirc;",
-        "\u00c3": "&Atilde;",
-        "\u00c4": "&Auml;",
-        "\u00c5": "&Aring;",
-        "\u00c6": "&AElig;",
-        "\u00c7": "&Ccedil;",
-        "\u00c8": "&Egrave;",
-        "\u00c9": "&Eacute;",
-        "\u00ca": "&Ecirc;",
-        "\u00cb": "&Euml;",
-        "\u00cc": "&Igrave;",
-        "\u00cd": "&Iacute;",
-        "\u00ce": "&Icirc;",
-        "\u00cf": "&Iuml;",
-        "\u00d0": "&ETH;",
-        "\u00d1": "&Ntilde;",
-        "\u00d2": "&Ograve;",
-        "\u00d3": "&Oacute;",
-        "\u00d4": "&Ocirc;",
-        "\u00d5": "&Otilde;",
-        "\u00d6": "&Ouml;",
-        "\u00d7": "&times;",
-        "\u00d8": "&Oslash;",
-        "\u00d9": "&Ugrave;",
-        "\u00da": "&Uacute;",
-        "\u00db": "&Ucirc;",
-        "\u00dc": "&Uuml;",
-        "\u00dd": "&Yacute;",
-        "\u00de": "&THORN;",
-        "\u00df": "&szlig;",
-        "\u00e0": "&agrave;",
-        "\u00e1": "&aacute;",
-        "\u00e2": "&acirc;",
-        "\u00e3": "&atilde;",
-        "\u00e4": "&auml;",
-        "\u00e5": "&aring;",
-        "\u00e6": "&aelig;",
-        "\u00e7": "&ccedil;",
-        "\u00e8": "&egrave;",
-        "\u00e9": "&eacute;",
-        "\u00ea": "&ecirc;",
-        "\u00eb": "&euml;",
-        "\u00ec": "&igrave;",
-        "\u00ed": "&iacute;",
-        "\u00ee": "&icirc;",
-        "\u00ef": "&iuml;",
-        "\u00f0": "&eth;",
-        "\u00f1": "&ntilde;",
-        "\u00f2": "&ograve;",
-        "\u00f3": "&oacute;",
-        "\u00f4": "&ocirc;",
-        "\u00f5": "&otilde;",
-        "\u00f6": "&ouml;",
-        "\u00f7": "&divide;",
-        "\u00f8": "&oslash;",
-        "\u00f9": "&ugrave;",
-        "\u00fa": "&uacute;",
-        "\u00fb": "&ucirc;",
-        "\u00fc": "&uuml;",
-        "\u00fd": "&yacute;",
-        "\u00fe": "&thorn;",
-        "\u00ff": "&yuml;"
-    };
-    
-    return function (str)
-    {
-        return String(str).replace(/[\u0022\u0026\u0027\u003c\u003e\u00a0-\u00ff]/g, function enc(symbol)
-        {
-            return entities[symbol];
-        });
-    };
-}());
 
 function get_thumb_info(file)
 {
@@ -256,6 +140,10 @@ create_thumbnail = (function ()
             
             execFile("convert", args, function (err, stdout, stderr)
             {
+                if (stderr) {
+                    console.log("Error converting image");
+                    console.log(stderr);
+                }
                 if (typeof callback === "function") {
                     callback(thumb_name);
                 }
@@ -268,7 +156,7 @@ create_thumbnail = (function ()
         function zeroPad(num, places)
         {
             var zero = places - num.toString().length + 1;
-            return Array(+(zero > 0 && zero)).join("0") + num;
+            return new Array(+(zero > 0 && zero)).join("0") + num;
         }
         
         function create_animation(files, thumb_name, callback)
@@ -291,6 +179,10 @@ create_thumbnail = (function ()
             
             execFile("convert", args, function (err, stdout, stderr)
             {
+                if (stderr) {
+                    console.log("Error animation 1:");
+                    console.log(stderr);
+                }
                 /// Add the the play button watermark.
                 ///TODO: Determine if this can be combined with another command.
                 ///TODO: Make the play button scale if the image is too small.
@@ -298,6 +190,7 @@ create_thumbnail = (function ()
                 {
 
                     if (stderr) {
+                        console.log("Error animation 2:");
                         console.log(stderr);
                     }
                     
@@ -355,7 +248,7 @@ create_thumbnail = (function ()
             if (!max_size) {
                 max_size = default_size;
             } else {
-                max_size = Math.floor(max_size/ 2) * 2;
+                max_size = Math.floor(max_size / 2) * 2;
             }
             
             get_video_info(video, function (info)
@@ -380,6 +273,10 @@ create_thumbnail = (function ()
                     
                     execFile("ffmpeg", ["-ss", i * interval, "-i", video, "-vframes", 1, "-s", thumb_size, frame_thumb_name], function (err, stdout, stderr)
                     {
+                        if (stderr) {
+                            console.log("Error animation 3:");
+                            console.log(stderr);
+                        }
                         callback();
                     });
                 }
@@ -399,7 +296,7 @@ create_thumbnail = (function ()
                 
                 loop(0);
             });
-        }
+        };
     }());
     
     return function create_thumbnail(file, callback, max_size, overwrite)
@@ -407,7 +304,7 @@ create_thumbnail = (function ()
         var thumb_info = get_thumb_info(file);
         
         if (!path.existsSync(thumb_info.thumb_dir)) {
-            fs.mkdirSync(thumb_info.thumb_dir, 0777);
+            fs.mkdirSync(thumb_info.thumb_dir, 777);
         }
         
         if (!max_size) {
@@ -435,39 +332,44 @@ create_thumbnail = (function ()
 
 function walk_through_folders(dir, func, callback)
 {
-    var content,
-        i;
+    var content;
     
     if (dir.substr(-1) !== "/") {
         dir += "/";
     }
     
-    content = fs.readdirSync(dir);
-    
-    function loop(i)
+    fs.readdir(dir, function (err, content)
     {
-        function iterate()
+        (function loop(i)
         {
-            loop(i - 1);
-        }
-        
-        if (i < 0) {
-            callback();
-            return;
-        }
-        
-        if (fs.statSync(dir + content[i]).isDirectory()) {
-            if (content[i] === config.thumbs_dir) {
-                iterate();
-            } else {
-                walk_through_folders(dir + content[i] + "/", func, iterate);
+            function iterate()
+            {
+                loop(i - 1);
             }
-        } else {
-            func(dir + content[i], iterate);
-        }
-    }
-    
-    loop(content.length - 1);
+            
+            if (i < 0) {
+                loop = null;
+                content = null;
+                callback();
+                return;
+            }
+            
+            if (fs.statSync(dir + content[i]).isDirectory()) {
+                    console.log(i, content[i]);
+                if (content[i] === config.thumbs_dir) {
+                    iterate();
+                } else {
+                    walk_through_folders(dir + content[i] + "/", func, iterate);
+                }
+            } else {
+                /// This is needed both to let the server handle other requests as well as prevent exceeding the maximum stack size.
+                setTimeout(function ()
+                {
+                    func(dir + content[i], iterate);
+                }, 10);
+            }
+        }(content.length - 1));
+    });
 }
 
 function create_all_thumbnails()
@@ -487,6 +389,7 @@ function create_all_thumbnails()
         
         for (i = content.length - 1; i >= 0; i -= 1) {
             if (fs.statSync(dir + content[i]).isDirectory()) {
+                console.log(content[i])
                 if (content[i] === config.thumbs_dir) {
                     thumbs = fs.readdirSync(dir + content[i] + "/");
                     for (j = thumbs.length - 1; j >= 0; j -= 1) {
@@ -500,9 +403,11 @@ function create_all_thumbnails()
             }
         }
     }
-    
+    //check_for_duplicates(config.dir);
+    //return;
     walk_through_folders(config.dir, create_thumbnail, function ()
     {
+        console.log("After walkthrough");
         check_for_duplicates(config.dir);
         setTimeout(create_all_thumbnails, config.create_thumbnail_delay);
     });
@@ -511,7 +416,9 @@ function create_all_thumbnails()
 function get_files_or_dirs(dir, get_files)
 {
     var content = fs.readdirSync(dir),
+        i,
         is_dir,
+        len,
         stuff = [];
     
     content.sort(function case_insensitive(a, b)
@@ -545,9 +452,9 @@ function make_top_html(dir)
     dir = String(dir).trim();
     
     if (dir === "") {
-        title = htmlentities(config.title);
+        title = server.htmlentities(config.title);
     } else {
-        title = beautify_name(dir) + " - " + htmlentities(config.title);
+        title = beautify_name(dir) + " - " + server.htmlentities(config.title);
     }
     
     html += "<html>";
@@ -575,9 +482,9 @@ function toTitleCase(word)
 {
     var smallWords = /^(a(?:nd?|s|t)?|b(?:ut|y)|en|for|i(?:f|n)|o(?:f|n|r)|t(?:he|o)|v(?:s?\.?|ia))$/i;
     
-    return word.replace(/([^\W_]+[^\s-]*) */g, function (match, p1, index, title)
+    return word.replace(/([^\W_]+[^\s\-]*) */g, function (match, p1, index, title)
     {
-        if (index > 0 && index + p1.length !== title.length && p1.search(smallWords) > -1 && title.charAt(index - 2) !== ":" && title.charAt(index - 1).search(/[^\s-]/) < 0) {
+        if (index > 0 && index + p1.length !== title.length && p1.search(smallWords) > -1 && title.charAt(index - 2) !== ":" && title.charAt(index - 1).search(/[^\s\-]/) < 0) {
             return match.toLowerCase();
         }
     
@@ -587,12 +494,12 @@ function toTitleCase(word)
         
         return match.charAt(0).toUpperCase() + match.substr(1);
     });
-};
+}
 
 
 function beautify_name(name)
 {
-    return htmlentities(toTitleCase(path.basename(name, path.extname(name)).replace(/_/g, " ").replace(/^([1-2]\d\d\d)([01]\d)([0-3]\d)/, "$2/$3/$1").replace(/^([1-2]\d\d\d)([01]\d)/, "$1/$2")));
+    return server.htmlentities(toTitleCase(path.basename(name, path.extname(name)).replace(/_/g, " ").replace(/^([1-2]\d\d\d)([01]\d)([0-3]\d)/, "$2/$3/$1").replace(/^([1-2]\d\d\d)([01]\d)/, "$1/$2")));
 }
 
 function random_rotation_css(min, max)
@@ -607,13 +514,14 @@ function make_picture_pile(name, dir, rel_path)
     var content = fs.readdirSync(dir),
         i = 0,
         count = 0,
-        html = "";
+        html = "",
+        thumb_info;
     
     if (dir.substr(-1) !== "/") {
         dir += "/";
     }
     
-    html += "<div class=picpile><a href=\"" + htmlentities(rel_path) + "/\">";
+    html += "<div class=picpile><a href=\"" + server.htmlentities(rel_path) + "/\">";
     
     for (;;) {
         if (!content[i] || count === 5) {
@@ -623,7 +531,7 @@ function make_picture_pile(name, dir, rel_path)
         if (!fs.statSync(dir + content[i]).isDirectory()) {
             thumb_info = get_thumb_info(dir + content[i]);
             if (thumb_info.exists) {
-                html += "<img style=\"" + random_rotation_css(-15, 15) +"\" src=\"" + htmlentities(rel_path + "/" + thumb_info.thumb_path_rel) + "\">";
+                html += "<img style=\"" + random_rotation_css(-15, 15) + "\" src=\"" + server.htmlentities(rel_path + "/" + thumb_info.thumb_path_rel) + "\">";
                 count += 1;
             }
         }
@@ -636,7 +544,7 @@ function make_picture_pile(name, dir, rel_path)
     return html;
 }
 
-//setTimeout(create_all_thumbnails, 0);
+setTimeout(create_all_thumbnails, 1000);
 
 /// Start the server.
 server.start_server(server_config, function (data, response)
@@ -675,10 +583,10 @@ server.start_server(server_config, function (data, response)
                 if (files[i] !== "Thumbs.db") {
                     thumb_info = get_thumb_info(path.join(data.filename, files[i]));
                     if (thumb_info.exists) {
-                        response.write("<div class=pic><a style=\"" + random_rotation_css(-6, 6) +"\" target=_blank title=\"" + beautify_name(files[i]) + "\" href=\"" + htmlentities(files[i]) + "\">");
-                        response.write("<img onload=\"adjust_pic_width(this)\" src=\"" + htmlentities(thumb_info.thumb_path_rel) + "\">");
+                        response.write("<div class=pic><a style=\"" + random_rotation_css(-6, 6) + "\" target=_blank title=\"" + beautify_name(files[i]) + "\" href=\"" + server.htmlentities(files[i]) + "\">");
+                        response.write("<img onload=\"adjust_pic_width(this)\" src=\"" + server.htmlentities(thumb_info.thumb_path_rel) + "\">");
                     } else {
-                        response.write("<div class=icon><a target=_blank title=\"" + beautify_name(files[i]) + "\" href=\"" + htmlentities(files[i]) + "\">");
+                        response.write("<div class=icon><a target=_blank title=\"" + beautify_name(files[i]) + "\" href=\"" + server.htmlentities(files[i]) + "\">");
                         /// If it has no icon, display a blank page icon in its stead.
                         response.write("<img src=\"/images/file-icon.png?virtual=1\">");
                     }
