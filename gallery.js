@@ -3,11 +3,11 @@
 /// For help: node server.js --help
 
 var execFile = require("child_process").execFile,
-    fs    = require("fs"),
-    http  = require("http"),
-    path  = require("path"),
-    url   = require("url"),
-    qs    = require("querystring"),
+    fs       = require("fs"),
+    path     = require("path"),
+    url      = require("url"),
+    qs       = require("querystring"),
+    server   = require("./server.js"),
     
     /// Third party dependancy
     mime = require("./mime/"),
@@ -17,31 +17,25 @@ var execFile = require("child_process").execFile,
     create_thumbnail,
     htmlentities,
     
-    root_path = process.cwd(),
-    port      = 8888;
+    server_config = {};
 
-if (process.argv.length > 3) {
-    root_path = process.argv[2];
-    port = process.argv[3];
-} else if (String(Number(process.argv[2])) === process.argv[2]) {
-    port = process.argv[2];
-} else {
-    root_path = process.argv[2];
-}
+server_config.root_path = config.dir;
 
-/// Convert it to an absolute path.
-root_path = path.resolve(root_path);
+/// Make sure it is an absolute path.
+config.base_path = path.resolve(config.base_path);
 
 process.on("uncaughtException", function(e)
 {
-    
     ///NOTE: This does not work right in at least Node.js 0.6.15. The e.errno and e.code are the same for some reason. Do more research and maybe send a bug report.
     if (e.errno === 98) {
         console.log("Error: Unable to create server because port " + port + " is already is use.");
     } else if (e.errno === 13) {
         console.log("Error: You do not have permission to open port " + port + ".\nTry a port above 1023 or running \"sudo !!\"");
     } else {
-        console.log(e.stack);
+        if (e.stack) {
+            console.log(e.stack);
+        }
+        console.log(e);
     }
     
     process.exit(e.errno);
@@ -240,7 +234,7 @@ create_thumbnail = (function ()
                 return "C:\\temp\\";
             }
             
-            return root_path + "/";
+            return config.base_path + "/";
         }());
     
     function random_str()
@@ -300,7 +294,7 @@ create_thumbnail = (function ()
                 /// Add the the play button watermark.
                 ///TODO: Determine if this can be combined with another command.
                 ///TODO: Make the play button scale if the image is too small.
-                execFile("convert", [thumb_name, "-coalesce", "-gravity", "Center", "-geometry", "+0+0", "null:", root_path + "/images/play.png", "-layers", "composite", "-layers", "optimize", thumb_name], function (err, stdout, stderr)
+                execFile("convert", [thumb_name, "-coalesce", "-gravity", "Center", "-geometry", "+0+0", "null:", config.base_path + "/images/play.png", "-layers", "composite", "-layers", "optimize", thumb_name], function (err, stdout, stderr)
                 {
 
                     if (stderr) {
@@ -319,8 +313,8 @@ create_thumbnail = (function ()
         }
         
         /**
-        * Get the size and duration of a video file (in seconds, not including miliseconds).
-        */
+         * Get the size and duration of a video file (in seconds, not including miliseconds).
+         */
         function get_video_info(video, callback)
         {
             if (typeof callback !== "function") {
@@ -642,153 +636,74 @@ function make_picture_pile(name, dir, rel_path)
     return html;
 }
 
-setTimeout(create_all_thumbnails, 0);
-
+//setTimeout(create_all_thumbnails, 0);
 
 /// Start the server.
-http.createServer(function (request, response)
+server.start_server(server_config, function (data, response)
 {
-    var cookies,
-        filename,
-        get_data,
-        post_data,
-        uri,
-        url_parsed = url.parse(request.url);
+    var basedir,
+        dirs,
+        files,
+        i,
+        len,
+        thumb_info,
+        stat;
     
-    /// If the gallery is password protected, check for credentials.
-    ///NOTE: This method is not secure and should not be used over a public connection.
-    ///NOTE: .substr(6) is to remove the text "Basic " preceeding the usernamd and password.
-    if (config.protect && (!request.headers.authorization || new Buffer(request.headers.authorization.substr(6), "base64").toString("utf8") !== config.username + ":" + config.password)) {
-        response.writeHead(401, {"Content-Type": "text/html", "WWW-Authenticate": "Basic realm=\"Secure Area\""});
-        response.write("Unauthorized");
-        response.end();
-        return;
-    }
-    
-    uri = qs.unescape(url_parsed.pathname);
-    
-    /// A valid request must begin with a slash.
-    if (uri[0] !== "/") {
-        response.end();
-        return;
-    }
-    
-    filename = path.join(config.dir, uri);
-    
-    function request_page()
-    {
-        var basedir,
-            dirs,
-            files,
-            i,
-            len,
-            thumb_info,
-            stat;
-        
-        if (path.existsSync(filename)) {
-            stat = fs.statSync(filename);
-            if (stat.isDirectory()) {
-                response.writeHead(200, {"Content-Type": "text/html"});
-                response.write(make_top_html(path.basename(uri.substr(0, uri.length - 1))));
-                
-                /// Display folders.
-                dirs = get_files_or_dirs(filename, false);
-                if (uri !== "/") {
-                    ///NOTE: There is an emdash, not a hyphen, because it looks better in the Euphoria font.
-                    response.write(make_picture_pile("<– Back", path.dirname(filename), ".."));
-                }
-                len = dirs.length;
-                for (i = 0; i < len; i += 1) {
-                    response.write(make_picture_pile(dirs[i], path.join(filename, dirs[i]), dirs[i]));
-                }
-                
-                /// Display thumbnails.
-                files = get_files_or_dirs(filename, true);
-                len = files.length;
-                for (i = 0; i < len; i += 1) {
-                    /// Ignore dummy files.
-                    ///TODO: Make this configurable.
-                    if (files[i] !== "Thumbs.db") {
-                        thumb_info = get_thumb_info(path.join(filename, files[i]));
-                        if (thumb_info.exists) {
-                            response.write("<div class=pic><a style=\"" + random_rotation_css(-6, 6) +"\" target=_blank title=\"" + beautify_name(files[i]) + "\" href=\"" + htmlentities(files[i]) + "\">");
-                            response.write("<img onload=\"adjust_pic_width(this)\" src=\"" + htmlentities(thumb_info.thumb_path_rel) + "\">");
-                        } else {
-                            response.write("<div class=icon><a target=_blank title=\"" + beautify_name(files[i]) + "\" href=\"" + htmlentities(files[i]) + "\">");
-                            /// If it has no icon, display a blank page icon in its stead.
-                            response.write("<img src=\"/images/file-icon.png?virtual=1\">");
-                        }
-                        response.write("</a></div>");
+    if (path.existsSync(data.filename)) {
+        stat = fs.statSync(data.filename);
+        if (stat.isDirectory()) {
+            response.write_head(200, {"Content-Type": "text/html"});
+            response.write(make_top_html(path.basename(data.uri.substr(0, data.uri.length - 1))));
+            
+            /// Display folders.
+            dirs = get_files_or_dirs(data.filename, false);
+            if (data.uri !== "/") {
+                ///NOTE: There is an emdash, not a hyphen, because it looks better in the Euphoria font.
+                response.write(make_picture_pile("<– Back", path.dirname(data.filename), ".."));
+            }
+            len = dirs.length;
+            for (i = 0; i < len; i += 1) {
+                response.write(make_picture_pile(dirs[i], path.join(data.filename, dirs[i]), dirs[i]));
+            }
+            
+            /// Display thumbnails.
+            files = get_files_or_dirs(data.filename, true);
+            len = files.length;
+            for (i = 0; i < len; i += 1) {
+                /// Ignore dummy files.
+                ///TODO: Make this configurable.
+                if (files[i] !== "Thumbs.db") {
+                    thumb_info = get_thumb_info(path.join(data.filename, files[i]));
+                    if (thumb_info.exists) {
+                        response.write("<div class=pic><a style=\"" + random_rotation_css(-6, 6) +"\" target=_blank title=\"" + beautify_name(files[i]) + "\" href=\"" + htmlentities(files[i]) + "\">");
+                        response.write("<img onload=\"adjust_pic_width(this)\" src=\"" + htmlentities(thumb_info.thumb_path_rel) + "\">");
+                    } else {
+                        response.write("<div class=icon><a target=_blank title=\"" + beautify_name(files[i]) + "\" href=\"" + htmlentities(files[i]) + "\">");
+                        /// If it has no icon, display a blank page icon in its stead.
+                        response.write("<img src=\"/images/file-icon.png?virtual=1\">");
                     }
-                }
-                
-                ///TODO: Display next folder (if any). (What about previous folder?)
-                
-                response.write(make_bottom_html());
-                
-            /// Write out files.
-            ///TODO: Make reading the files async.
-            } else {
-                /// Check cache.
-                if (request.headers["if-modified-since"] && Date.parse(request.headers["if-modified-since"]) >= Date.parse(stat.mtime)) {
-                    response.writeHead(304, {});
-                } else {
-                    response.writeHead(200, {"Content-Type": mime.lookup(filename), "Last-Modified": stat.mtime});
-                    response.write(fs.readFileSync(filename));
+                    response.write("</a></div>");
                 }
             }
-        } else if (get_data.virtual && path.existsSync(root_path + uri)) {
-            /// Make sure it cannot access all files (just files in certain sub directories).
-            basedir = path.dirname(uri);
-            if (basedir === "/css" || basedir === "/client" || basedir === "/images" || basedir === "/fonts" || basedir === "/readme") {
-                stat = fs.statSync(root_path + uri);
-                /// Check cache.
-                if (request.headers["if-modified-since"] && Date.parse(request.headers["if-modified-since"]) >= Date.parse(stat.mtime)) {
-                    response.writeHead(304, {});
-                } else {
-                    response.writeHead(200, {"Content-Type": mime.lookup(uri), "Last-Modified": stat.mtime});
-                    response.write(fs.readFileSync(root_path + uri));
-                }
+            
+            ///TODO: Display next folder (if any). (What about previous folder?)
+            
+            response.write(make_bottom_html());
+        }
+    } else if (data.get.virtual && path.existsSync(config.base_path + data.uri)) {
+        /// Make sure it cannot access all files (just files in certain sub directories).
+        basedir = path.dirname(data.uri);
+        if (basedir === "/css" || basedir === "/client" || basedir === "/images" || basedir === "/fonts" || basedir === "/readme") {
+            stat = fs.statSync(config.base_path + data.uri);
+            /// Check cache.
+            if (data.headers["if-modified-since"] && Date.parse(data.headers["if-modified-since"]) >= Date.parse(stat.mtime)) {
+                response.write_head(304, {});
+            } else {
+                response.write_head(200, {"Content-Type": mime.lookup(data.uri), "Last-Modified": stat.mtime});
+                response.write(fs.readFileSync(config.base_path + data.uri));
             }
         }
-        
-        response.end();
     }
     
-    /// Are there cookies?
-    if (request.headers.cookie) {
-        cookies = {};
-        request.headers.cookie.split(";").forEach(function (cookie)
-        {
-            var parts = cookie.split("=");
-            cookies[parts[0]] = parts[1];
-        });
-    }
-    
-    /// Is there GET data?
-    if (url_parsed.query !== "") {
-        ///NOTE: GET data can be retrieved in node.js scripts via the following code:
-        get_data = qs.parse(url_parsed.query);
-    }
-    
-    /// Is there POST data?
-    if (request.method === "POST") {
-    
-        post_data = "";
-        
-        request.on("data", function(chunk)
-        {
-            /// Get the POST data.
-            post_data += chunk.toString();
-        });
-        
-        request.on("end", function(chunk)
-        {
-            post_data = qs.parse(post_data);
-            request_page();
-        });
-    } else {
-        request_page();
-    }
-    
-}).listen(port);
+    response.end();
+});
