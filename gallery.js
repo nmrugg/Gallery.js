@@ -330,7 +330,7 @@ create_thumbnail = (function ()
 }());
 
 
-function walk_through_folders(dir, func, callback)
+function walk_through_folders(dir, obj, callback)
 {
     var content;
     
@@ -344,7 +344,10 @@ function walk_through_folders(dir, func, callback)
         {
             function iterate()
             {
-                loop(i - 1);
+                setTimeout(function ()
+                {
+                    loop(i - 1);
+                }, 10);
             }
             
             if (i < 0) {
@@ -355,17 +358,23 @@ function walk_through_folders(dir, func, callback)
             }
             
             if (fs.statSync(dir + content[i]).isDirectory()) {
-                    console.log(i, content[i]);
-                if (content[i] === config.thumbs_dir) {
+                console.log(i, content[i]);
+                /// Check to see if we should enter into this folder.
+                if (obj.check_dir(content[i], dir + content[i] + "/")) {
+                    /// Skip this folder.
                     iterate();
                 } else {
-                    walk_through_folders(dir + content[i] + "/", func, iterate);
+                    /// Enter into this folder.
+                    setTimeout(function ()
+                    {
+                        walk_through_folders(dir + content[i] + "/", obj, iterate);
+                    }, 10);
                 }
             } else {
                 /// This is needed both to let the server handle other requests as well as prevent exceeding the maximum stack size.
                 setTimeout(function ()
                 {
-                    func(dir + content[i], iterate);
+                    obj.action(dir + content[i], iterate);
                 }, 10);
             }
         }(content.length - 1));
@@ -374,41 +383,31 @@ function walk_through_folders(dir, func, callback)
 
 function create_all_thumbnails()
 {
-    function check_for_duplicates(dir)
-    {
-        var content,
-            i,
-            j,
-            thumbs;
-        
-        if (dir.substr(-1) !== "/") {
-            dir += "/";
-        }
-        
-        content = fs.readdirSync(dir);
-        
-        for (i = content.length - 1; i >= 0; i -= 1) {
-            if (fs.statSync(dir + content[i]).isDirectory()) {
-                console.log(content[i])
-                if (content[i] === config.thumbs_dir) {
-                    thumbs = fs.readdirSync(dir + content[i] + "/");
-                    for (j = thumbs.length - 1; j >= 0; j -= 1) {
-                        if (!path.existsSync(dir + path.basename(thumbs[j], path.extname(thumbs[j])))) {
-                            fs.unlinkSync(dir + content[i] + "/" + thumbs[j]);
-                        }
+
+    walk_through_folders(config.dir, {
+        action: create_thumbnail, check_dir: function (name, pathname)
+        {
+            /// If this is a thumbnail folder, check for extra, straggling thumbnails.
+            if (name === config.thumbs_dir) {
+                fs.readdirSync(pathname).forEach(function (thumb)
+                {
+                    if (!path.existsSync(pathname + "../" + path.basename(thumb, path.extname(thumb)))) {
+                        /// Delete thumbnails that do not have a matching file.
+                        console.log("Deleting " + pathname + thumb);
+                        fs.unlinkSync(pathname + thumb);
                     }
-                } else {
-                    check_for_duplicates(dir + content[i] + "/");
-                }
+                });
+                
+                /// Return false to prevent walk_through_folders() from entering into the thumbnail folder.
+                return true;
             }
+            
+            /// Allow walk_through_folders() to enter into the folder.
+            return false;
         }
-    }
-    //check_for_duplicates(config.dir);
-    //return;
-    walk_through_folders(config.dir, create_thumbnail, function ()
+    }, function on_complete()
     {
         console.log("After walkthrough");
-        check_for_duplicates(config.dir);
         setTimeout(create_all_thumbnails, config.create_thumbnail_delay);
     });
 }
