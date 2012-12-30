@@ -14,8 +14,9 @@ var execFile = require("child_process").execFile,
     
     create_thumbnail,
     
-    server_config = {};
-
+    server_config = {},
+    
+    debug = false;
 
 server_config.root_path = config.dir;
 
@@ -41,6 +42,12 @@ process.on("uncaughtException", function (e)
     process.exit(e.errno);
 });
 
+function remove(arr, from, to)
+{
+    var rest = arr.slice((to || from) + 1 || arr.length);
+    arr.length = from < 0 ? arr.length + from : from;
+    return arr.push.apply(arr, rest);
+}
 
 function get_thumb_info(file)
 {
@@ -338,6 +345,8 @@ function walk_through_folders(dir, obj, callback)
     
     fs.readdir(dir, function (err, content)
     {
+        filter_out_ignored_files(content);
+        
         (function loop(i)
         {
             function iterate()
@@ -356,7 +365,9 @@ function walk_through_folders(dir, obj, callback)
             }
             
             if (fs.statSync(dir + content[i]).isDirectory()) {
-                console.log(i, content[i]);
+                if (debug) {
+                    console.log(i, content[i]);
+                }
                 /// Check to see if we should enter into this folder.
                 if (obj.check_dir(content[i], dir + content[i] + "/")) {
                     /// Skip this folder.
@@ -391,7 +402,9 @@ function create_all_thumbnails()
                 {
                     if (!path.existsSync(pathname + "../" + path.basename(thumb, path.extname(thumb)))) {
                         /// Delete thumbnails that do not have a matching file.
-                        console.log("Deleting " + pathname + thumb);
+                        if (debug) {
+                            console.log("Deleting " + pathname + thumb);
+                        }
                         fs.unlinkSync(pathname + thumb);
                     }
                 });
@@ -405,14 +418,41 @@ function create_all_thumbnails()
         }
     }, function on_complete()
     {
-        console.log("After walkthrough");
+        if (debug) {
+            console.log("After walkthrough");
+        }
         setTimeout(create_all_thumbnails, config.create_thumbnail_delay);
     });
 }
 
+function filter_out_ignored_files(files)
+{
+    var i,
+        ignore_inc,
+        ignore_len = config.ignore.length,
+        lowercase;
+    
+    for (i = files.length - 1; i >= 0; i -= 1) {
+        lowercase = files[i].toLowerCase();
+        for (ignore_inc = 0; ignore_inc < ignore_len; ignore_inc += 1) {
+            if (config.ignore[ignore_inc].test(lowercase)) {
+                remove(files, i);
+                break;
+            }
+        }
+    }
+}
+
+function get_filtered_files(dir)
+{
+    var content = fs.readdirSync(dir);
+    filter_out_ignored_files(content);
+    return content;
+}
+
 function get_files_or_dirs(dir, get_files)
 {
-    var content = fs.readdirSync(dir),
+    var content = get_filtered_files(dir),
         i,
         is_dir,
         len,
@@ -508,11 +548,15 @@ function random_rotation_css(min, max)
 
 function make_picture_pile(name, dir, rel_path)
 {
-    var content = fs.readdirSync(dir),
+    var content = get_filtered_files(dir),
         i = 0,
         count = 0,
         html = "",
         thumb_info;
+    
+    if (content.length === 0 || content.length === 1 && content[0] === config.thumbs_dir) {
+        return "";
+    }
     
     if (dir.substr(-1) !== "/") {
         dir += "/";
@@ -575,20 +619,16 @@ server.start_server(server_config, function (data, response)
             files = get_files_or_dirs(data.filename, true);
             len = files.length;
             for (i = 0; i < len; i += 1) {
-                /// Ignore dummy files.
-                ///TODO: Make this configurable.
-                if (files[i] !== "Thumbs.db") {
-                    thumb_info = get_thumb_info(path.join(data.filename, files[i]));
-                    if (thumb_info.exists) {
-                        response.write("<div class=pic><a style=\"" + random_rotation_css(-6, 6) + "\" target=_blank title=\"" + beautify_name(files[i]) + "\" href=\"" + server.htmlentities(files[i]) + "\">");
-                        response.write("<img onload=\"adjust_pic_width(this)\" src=\"" + server.htmlentities(thumb_info.thumb_path_rel) + "\">");
-                    } else {
-                        response.write("<div class=icon><a target=_blank title=\"" + beautify_name(files[i]) + "\" href=\"" + server.htmlentities(files[i]) + "\">");
-                        /// If it has no icon, display a blank page icon in its stead.
-                        response.write("<img src=\"/images/file-icon.png?virtual=1\">");
-                    }
-                    response.write("</a></div>");
+                thumb_info = get_thumb_info(path.join(data.filename, files[i]));
+                if (thumb_info.exists) {
+                    response.write("<div class=pic><a style=\"" + random_rotation_css(-6, 6) + "\" target=_blank title=\"" + beautify_name(files[i]) + "\" href=\"" + server.htmlentities(files[i]) + "\">");
+                    response.write("<img onload=\"adjust_pic_width(this)\" src=\"" + server.htmlentities(thumb_info.thumb_path_rel) + "\">");
+                } else {
+                    response.write("<div class=icon><a target=_blank title=\"" + beautify_name(files[i]) + "\" href=\"" + server.htmlentities(files[i]) + "\">");
+                    /// If it has no icon, display a blank page icon in its stead.
+                    response.write("<img src=\"/images/file-icon.png?virtual=1\">");
                 }
+                response.write("</a></div>");
             }
             
             ///TODO: Display next folder (if any). (What about previous folder?)
