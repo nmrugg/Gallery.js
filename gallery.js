@@ -14,9 +14,7 @@ var execFile = require("child_process").execFile,
     
     create_thumbnail,
     
-    server_config = {},
-    
-    debug = false;
+    server_config = {};
 
 server_config.root_path = config.dir;
 
@@ -321,8 +319,14 @@ create_thumbnail = (function ()
         if (thumb_info.type) {
             if (overwrite || !thumb_info.exists) {
                 if (thumb_info.type === "img") {
+                    if (config.debug) {
+                        console.log("Creating thumbnail:", file);
+                    }
                     create_image_thumb(file, thumb_info.thumb_path, callback, max_size);
                 } else {
+                    if (config.debug) {
+                        console.log("Creating video thumbnail:", file);
+                    }
                     create_video_thumbnail(file, thumb_info.thumb_path, callback, max_size);
                 }
             } else {
@@ -365,7 +369,7 @@ function walk_through_folders(dir, obj, callback)
             }
             
             if (fs.statSync(dir + content[i]).isDirectory()) {
-                if (debug) {
+                if (config.debug) {
                     console.log(i, content[i]);
                 }
                 /// Check to see if we should enter into this folder.
@@ -402,7 +406,7 @@ function create_all_thumbnails()
                 {
                     if (!path.existsSync(pathname + "../" + path.basename(thumb, path.extname(thumb)))) {
                         /// Delete thumbnails that do not have a matching file.
-                        if (debug) {
+                        if (config.debug) {
                             console.log("Deleting " + pathname + thumb);
                         }
                         fs.unlinkSync(pathname + thumb);
@@ -418,7 +422,7 @@ function create_all_thumbnails()
         }
     }, function on_complete()
     {
-        if (debug) {
+        if (config.debug) {
             console.log("After walkthrough");
         }
         setTimeout(create_all_thumbnails, config.create_thumbnail_delay);

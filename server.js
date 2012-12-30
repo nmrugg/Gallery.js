@@ -130,12 +130,15 @@ exports.htmlentities = (function ()
 /**
  * @param config   (object) An object describing the configuration options.
  *                          {
+ *                              password:           (string)  Password for basic authentification 
  *                              port:               (number)  The port number to listen to                                          (default: 8888)
  *                              post_limit          (number)  How many bytes to receive of POST data before dropping the connection (default: 2097152 (2mb))
+ *                              protect:            (boolean) Whether or not to require authentificatiopn                           (default: falsey)
  *                              redirect:           (array)   An array of URLs to be intercepted and sent to the callback           (default: ["/"])
  *                              redirect_on_errors: (boolean) Whether or not to send 404 errors to the callback                     (default: TRUE)
  *                              root_path:          (string)  The www root directory                                                (default: current working directory)
  *                              timeout:            (number)  How long to wait before dropping the connection if it hasn't finished (default: 60000 (1 min))
+ *                              username:           (string)  Usename for basic authentification
  *                          }
  * @param callback (function) The to send requsts too.
  */
