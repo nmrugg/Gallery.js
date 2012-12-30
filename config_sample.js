@@ -10,10 +10,10 @@ this.config = {
     /// An array of regular expressions used to ignore files.
     ///NOTE: file names are converted to lowercase before comparing
     /// E.g., /^dsci\d{4,}\.jpg$/ will ignore file like "dsci0001.jpg"
-    ignore:       [/^thumbs\.db$/]
+    ignore:       [/^thumbs\.db$/],
     
     /// Optional authentification settings
-    protect:  false
+    protect:  false,
     username: "user",
-    password: "pass",
+    password: "pass"
 };

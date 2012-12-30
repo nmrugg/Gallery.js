@@ -17,6 +17,9 @@ var execFile = require("child_process").execFile,
     server_config = {};
 
 server_config.root_path = config.dir;
+server_config.protect   = config.protect;
+server_config.username  = config.username;
+server_config.password  = config.password;
 
 /// Make sure it is an absolute path.
 config.base_path = path.resolve(config.base_path);
