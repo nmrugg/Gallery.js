@@ -561,7 +561,7 @@ function make_picture_pile(name, dir, rel_path)
         html = "",
         thumb_info;
     
-    if (content.length === 0 || content.length === 1 && content[0] === config.thumbs_dir) {
+    if (content.length === 0 || (content.length === 1 && content[0] === config.thumbs_dir)) {
         return "";
     }
     
