@@ -274,7 +274,7 @@ exports.start_server = function (config, callback)
                 }
             }
             
-            if (path.existsSync(filename)) {
+            if (fs.existsSync(filename)) {
                 stat = fs.statSync(filename);
                 if (stat.isDirectory()) {
                     if (config.redirect_on_errors) {

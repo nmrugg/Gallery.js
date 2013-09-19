@@ -103,7 +103,7 @@ function get_thumb_info(file)
     }
     
     return {
-        exists:         path.existsSync(thumb_path),
+        exists:         fs.existsSync(thumb_path),
         thumb_dir:      thumb_dir,
         thumb_path:     thumb_path,
         thumb_path_rel: config.thumbs_dir + "/" + path.basename(thumb_path),
@@ -118,11 +118,13 @@ create_thumbnail = (function ()
         default_size = 176,
         tmp_dir = (function ()
         {
-            if (path.existsSync("/tmp/")) {
+            if (config.tmp_dir) {
+                return config.tmp_dir;
+            } else if (fs.existsSync("/tmp/")) {
                 return "/tmp/";
-            } else if (path.existsSync("C:\\Windows\temp\\")) {
+            } else if (fs.existsSync("C:\\Windows\temp\\")) {
                 return "C:\\Windows\\temp\\";
-            } else if (path.existsSync("C:\\temp\\")) {
+            } else if (fs.existsSync("C:\\temp\\")) {
                 return "C:\\temp\\";
             }
             
@@ -138,7 +140,7 @@ create_thumbnail = (function ()
     {
         var args = [file, "-auto-orient", "-thumbnail", max_size + "x" + max_size];
         
-        if (path.existsSync(file)) {
+        if (fs.existsSync(file)) {
             if (!config.high_quality) {
                 args[args.length] = "-quality";
                 args[args.length] = 86;
@@ -222,7 +224,7 @@ create_thumbnail = (function ()
                 return;
             }
             
-            if (path.existsSync(video)) {
+            if (fs.existsSync(video)) {
                 execFile("ffmpeg", ["-i", video], function (err, stdout, stderr)
                 {
                     ///NOTE: The data is returned in stderr.
@@ -310,8 +312,9 @@ create_thumbnail = (function ()
     return function create_thumbnail(file, callback, max_size, overwrite)
     {
         var thumb_info = get_thumb_info(file);
+        console.log(file)
         
-        if (!path.existsSync(thumb_info.thumb_dir)) {
+        if (!fs.existsSync(thumb_info.thumb_dir)) {
             fs.mkdirSync(thumb_info.thumb_dir, 777);
         }
         
@@ -407,7 +410,7 @@ function create_all_thumbnails()
             if (name === config.thumbs_dir) {
                 fs.readdirSync(pathname).forEach(function (thumb)
                 {
-                    if (!path.existsSync(pathname + "../" + path.basename(thumb, path.extname(thumb)))) {
+                    if (!fs.existsSync(pathname + "../" + path.basename(thumb, path.extname(thumb)))) {
                         /// Delete thumbnails that do not have a matching file.
                         if (config.debug) {
                             console.log("Deleting " + pathname + thumb);
@@ -605,7 +608,7 @@ server.start_server(server_config, function (data, response)
         thumb_info,
         stat;
     
-    if (path.existsSync(data.filename)) {
+    if (fs.existsSync(data.filename)) {
         stat = fs.statSync(data.filename);
         if (stat.isDirectory()) {
             response.write_head(200, {"Content-Type": "text/html"});
@@ -642,7 +645,7 @@ server.start_server(server_config, function (data, response)
             
             response.write(make_bottom_html());
         }
-    } else if (data.get.virtual && path.existsSync(config.base_path + data.uri)) {
+    } else if (data.get.virtual && fs.existsSync(config.base_path + data.uri)) {
         /// Make sure it cannot access all files (just files in certain sub directories).
         basedir = path.dirname(data.uri);
         if (basedir === "/css" || basedir === "/client" || basedir === "/images" || basedir === "/fonts" || basedir === "/readme") {

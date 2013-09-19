@@ -16,3 +16,5 @@ Then navigate to http://127.0.0.1:8888
 <h3>License</h3>
 
 MIT: http://nate.mit-license.org
+
+See credits.txt for more details.
